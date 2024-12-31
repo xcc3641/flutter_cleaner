@@ -2,7 +2,20 @@
 
 A modern macOS application built with Flutter for managing and cleaning up project files efficiently.
 
+
 ![Flutter Cleaner Preview](https://is2-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/ce/bf/79/cebf7922-135f-99fb-22c4-54797d90de27/a37bff70-1c63-424f-8715-42ef3ce9dbf9_Amazing_Mockups_533shots.jpeg/0x0ss.png)
+
+[<img src="./download-on-the-app-store-badge-svg-pdf-ai-eps.jpg" alt="Download on the Mac App Store" width="100" />](https://apps.apple.com/us/app/cleaner-for-flutter/id6661026876)
+
+## About
+
+Reclaim your disk space with Flutter Build Cleaner - the essential tool for Flutter developers looking to efficiently manage their project's build files.
+
+Key Features:
+- 🔍 Smart scanning of Flutter project directories
+- 🗑️ Safe removal of build files and caches
+- 📊 Visual space usage analysis
+- ⚡ Instant disk space recovery
 
 ## Features
 
