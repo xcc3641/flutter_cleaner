@@ -1,0 +1,66 @@
+name: flutter_cleaner
+description: "A new Flutter project."
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+
+version: 1.1.1+10
+
+environment:
+  sdk: ">=3.4.4 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  shadcn_ui: ^0.17.0
+  file_picker: ^8.1.2
+  yaml: ^3.1.0
+  process_run: ^1.1.0
+  macos_secure_bookmarks: ^0.2.1
+  ffi: ^2.0.1
+  window_manager: ^0.4.2
+  flutter_spinkit: ^5.2.1
+  font_awesome_flutter: ^10.8.0
+  
+  # foundation
+  flutter_displaymode: ^0.6.0
+  path_provider: ^2.0.7
+  package_info_plus: ^8.0.0
+  go_router: ^14.2.0
+  flutter_svg: ^2.0.10+1
+  flutter_svg_provider: ^1.0.7
+  logger: ^2.3.0
+  permission_handler: ^11.3.1
+  intl: ^0.19.0
+
+  # hook & riverpod
+  flutter_hooks: ^0.18.5+1
+  hooks_riverpod: ^2.3.6
+  flutter_use: ^0.0.3
+  riverpod_annotation: ^2.1.1
+  shared_preferences_riverpod: ^0.3.0
+  url_launcher: ^6.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^3.0.0
+  flutter_gen_runner: ^5.3.1
+  build_runner: ^2.4.8
+  freezed: ^2.4.7
+  json_serializable: ^6.7.1
+  riverpod_generator: ^2.2.3
+  riverpod_lint: ^2.1.2
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+
+    
+flutter_gen:
+  output: lib/gen/ # Optional (default: lib/gen/)
+  line_length: 120 # Optional (default: 80)
+  # Optional
+  integrations:
+    flutter_svg: true
