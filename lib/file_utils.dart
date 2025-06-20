@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ffi';
+import 'package:ffi/ffi.dart';
+import 'package:win32/win32.dart';
 import 'dart:math';
 import 'package:flutter_cleaner/foundation/logger.dart';
 import 'package:flutter_cleaner/macos_trash.dart';
@@ -41,7 +44,9 @@ class FileUtils {
     String directory,
     void Function(int scanned, int total)? onProgress,
   ) async {
-    await BookmarkHelper.startAccessingSecurityScopedResource();
+    if (Platform.isMacOS) {
+  await BookmarkHelper.startAccessingSecurityScopedResource();
+}
     final dir = Directory(directory);
     final List<FileInfo> foundProjects = [];
 
@@ -83,7 +88,9 @@ class FileUtils {
       }
     }
 
-    await BookmarkHelper.stopAccessingSecurityScopedResource();
+    if (Platform.isMacOS) {
+  await BookmarkHelper.stopAccessingSecurityScopedResource();
+}
     foundProjects.sort((a, b) => b.size.compareTo(a.size));
     return foundProjects;
   }
@@ -118,11 +125,56 @@ class FileUtils {
         logger.e('Error moving to trash: $e');
         rethrow;
       }
+    }else if(Platform.isWindows){
+       try {
+      // Ensure path exists
+      if (!await FileSystemEntity.isFile(filePath) && 
+          !await FileSystemEntity.isDirectory(filePath)) {
+        throw FileSystemException('Path not found', filePath);
+      }
+
+      // Convert path to wide string with double null termination
+      final pathWide = _toWideString('$filePath\x00');
+      
+      // Create SHFILEOPSTRUCT
+      final fileOp = calloc<SHFILEOPSTRUCT>();
+      fileOp.ref.wFunc = FO_DELETE;
+      fileOp.ref.pFrom = pathWide;
+      fileOp.ref.pTo = nullptr;
+      fileOp.ref.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMATION | FOF_SILENT;
+      fileOp.ref.fAnyOperationsAborted = FALSE;
+      fileOp.ref.hNameMappings = nullptr;
+      fileOp.ref.lpszProgressTitle = nullptr;
+
+      // Execute the operation
+      final result = SHFileOperation(fileOp);
+      
+      // Clean up
+      calloc.free(pathWide);
+      calloc.free(fileOp);
+      
+      if (result != 0) {
+        throw FileSystemException(
+          'Failed to move to trash. Error code: $result', 
+          filePath
+        );
+      }
+    } catch (e) {
+      throw FileSystemException('Failed to move to trash: $e', filePath);
+    }
     } else {
       throw UnsupportedError('Moving to trash not supported on this platform');
     }
   }
-
+  /// Convert string to wide string (UTF-16) with proper null termination
+  static Pointer<Utf16> _toWideString(String str) {
+    final units = str.codeUnits;
+    final ptr = calloc<Uint16>(units.length + 1);
+    final list = ptr.asTypedList(units.length + 1);
+    list.setAll(0, units);
+    list[units.length] = 0; // Null terminator
+    return ptr.cast<Utf16>();
+  }
   static Future<void> remove(String filePath) async {
     logger.d('Attempting to move to trash: $filePath');
     if (Platform.isMacOS) {
@@ -134,6 +186,29 @@ class FileUtils {
         rethrow;
       }
       await BookmarkHelper.stopAccessingSecurityScopedResource();
+    }else if(Platform.isWindows){
+        try {
+      final entity = await FileSystemEntity.type(filePath);
+      
+      switch (entity) {
+        case FileSystemEntityType.file:
+          await File(filePath).delete();
+          break;
+        case FileSystemEntityType.directory:
+          await Directory(filePath).delete(recursive: true);
+          break;
+        case FileSystemEntityType.link:
+          await Link(filePath).delete();
+          break;
+        case FileSystemEntityType.notFound:
+          throw FileSystemException('Path not found', filePath);
+        case FileSystemEntityType.unixDomainSock:
+        case FileSystemEntityType.pipe:
+          throw FileSystemException('Unsupported file system entity type', filePath);
+      }
+    } catch (e) {
+      throw FileSystemException('Failed to remove: $e', filePath);
+    }
     }
 
     return;
@@ -146,6 +221,8 @@ class FileUtils {
       await BookmarkHelper.stopAccessingSecurityScopedResource();
     } else if (Platform.isLinux) {
       Shell().run('xdg-open "$filePath"');
+    }else if (Platform.isWindows) {
+      Process.run('explorer', [filePath]);
     } else {
       throw UnsupportedError('Opening in finder not supported on this platform');
     }

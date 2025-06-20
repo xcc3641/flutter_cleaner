@@ -59,14 +59,32 @@ class InfoPage extends HookConsumerWidget {
             width: double.maxFinite,
             child: const Text('Select Directory'),
             onPressed: () async {
-              String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+              String? selectedDirectory =
+                  await FilePicker.platform.getDirectoryPath();
               if (selectedDirectory != null) {
-                selectedDirectory = selectedDirectory.replaceFirst('/Volumes/Macintosh HD', '');
-                final bookmark = await bookmarks.bookmark(File(selectedDirectory));
-                await sCacheBookmark.write(bookmark);
-                ref.read(sCacheDirProvider.notifier).update(selectedDirectory);
-                ref.read(projectListProvider.notifier).refresh(selectedDirectory);
-                logger.d('selectedDirectory:[$selectedDirectory] bookmark:$bookmark');
+                if (Platform.isMacOS) {
+                  selectedDirectory = selectedDirectory.replaceFirst(
+                      '/Volumes/Macintosh HD', '');
+                  final bookmark =
+                      await bookmarks.bookmark(File(selectedDirectory));
+                  await sCacheBookmark.write(bookmark);
+                  ref
+                      .read(sCacheDirProvider.notifier)
+                      .update(selectedDirectory);
+                  ref
+                      .read(projectListProvider.notifier)
+                      .refresh(selectedDirectory);
+                  logger.d(
+                      'selectedDirectory:[$selectedDirectory] bookmark:$bookmark');
+                } else if (Platform.isWindows) {
+                  ref
+                      .read(sCacheDirProvider.notifier)
+                      .update(selectedDirectory);
+                  ref
+                      .read(projectListProvider.notifier)
+                      .refresh(selectedDirectory);
+                  logger.d('Windows selectedDirectory:[$selectedDirectory]');
+                }
               }
             },
           ),
@@ -74,7 +92,9 @@ class InfoPage extends HookConsumerWidget {
             width: double.maxFinite,
             enabled: ref.watch(sCacheDirProvider).isNotEmpty,
             onPressed: () {
-              ref.read(projectListProvider.notifier).refresh(ref.read(sCacheDirProvider));
+              ref
+                  .read(projectListProvider.notifier)
+                  .refresh(ref.read(sCacheDirProvider));
             },
             child: const Text('Refresh Directory'),
           ),
@@ -84,18 +104,19 @@ class InfoPage extends HookConsumerWidget {
             children: [
               ShadButton.outline(
                 size: ShadButtonSize.sm,
-                icon: const Icon(
+                leading: const Icon(
                   FontAwesomeIcons.github,
                   size: 16,
                 ),
                 onPressed: () {
-                  launchUrl(Uri.parse('https://github.com/xcc3641/flutter_cleaner'));
+                  launchUrl(
+                      Uri.parse('https://github.com/xcc3641/flutter_cleaner'));
                 },
               ),
               // https://x.com/Lumosous
               ShadButton.outline(
                 size: ShadButtonSize.sm,
-                icon: const Icon(
+                leading: const Icon(
                   FontAwesomeIcons.xTwitter,
                   size: 16,
                 ),

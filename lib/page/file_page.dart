@@ -129,7 +129,7 @@ class FilePage extends HookConsumerWidget {
                         height: 30,
                         child: FittedBox(
                           child: ShadButton.outline(
-                            icon: const Icon(
+                            leading: const Icon(
                               Icons.search,
                               size: 30,
                             ),
@@ -145,7 +145,7 @@ class FilePage extends HookConsumerWidget {
                         height: 30,
                         child: FittedBox(
                           child: ShadButton.outline(
-                            icon: const Icon(
+                            leading: const Icon(
                               Icons.delete_rounded,
                               size: 30,
                             ),
