@@ -1,19 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cleaner/file_utils.dart';
-import 'package:flutter_cleaner/foundation/preferences/prefs.dart';
 import 'package:flutter_cleaner/riverpod/project.dart';
+import 'package:flutter_cleaner/models.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:flutter_use/flutter_use.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:intl/intl.dart' as intl;
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'package:shared_preferences_riverpod/shared_preferences_riverpod.dart';
-
-final isDirectlyRemovePrefProvider = createPrefProvider<bool>(
-  prefs: (_) => Pref.instance,
-  prefKey: "is_directly_remove",
-  defaultValue: false,
-);
 
 class FilePage extends HookConsumerWidget {
   const FilePage({super.key});
@@ -23,13 +16,14 @@ class FilePage extends HookConsumerWidget {
     final projectList = ref.watch(projectListProvider);
     final projectState = ref.watch(projectStateProvider);
     final totalSize = projectList.fold(0, (sum, project) => sum + project.size);
+    final dirList = ref.watch(cacheDirListProvider);
 
     useEffectOnce(() {
       Future.microtask(() {
-        if (ref.read(sCacheDirProvider).isEmpty) {
+        if (dirList.isEmpty) {
           return;
         }
-        ref.read(projectListProvider.notifier).refresh(ref.read(sCacheDirProvider));
+        ref.read(projectListProvider.notifier).refresh(dirList);
       });
       return null;
     });
@@ -38,20 +32,18 @@ class FilePage extends HookConsumerWidget {
       children: [
         Container(
           color: Colors.grey.shade100,
-          padding: const EdgeInsets.only(right: 30),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
-              ShadButton.ghost(
-                child: Text(
-                  ref.watch(sCacheDirProvider),
-                  style: ShadTheme.of(context).textTheme.small.copyWith(fontWeight: FontWeight.bold),
-                ),
-                onPressed: () {
-                  FileUtils.openInFinder(ref.watch(sCacheDirProvider));
-                },
+              Text(
+                '${projectList.length} Projects found',
+                style: ShadTheme.of(context).textTheme.small.copyWith(fontWeight: FontWeight.bold),
               ),
               const Spacer(),
-              Text(FileUtils.formatFileSize(totalSize), style: ShadTheme.of(context).textTheme.muted),
+              Text(
+                'Cleanable: ${FileUtils.formatFileSize(totalSize)}',
+                style: ShadTheme.of(context).textTheme.muted,
+              ),
             ],
           ),
         ),
@@ -85,9 +77,16 @@ class FilePage extends HookConsumerWidget {
       case ProjectStateType.empty:
         return Center(
           key: const ValueKey('empty'),
-          child: Text(
-            'No projects found',
-            style: ShadTheme.of(context).textTheme.h1,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.folder_open, size: 64, color: Colors.grey.shade300),
+              const SizedBox(height: 16),
+              const Text(
+                'No cleanable projects found',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            ],
           ),
         );
       case ProjectStateType.error:
@@ -99,10 +98,12 @@ class FilePage extends HookConsumerWidget {
           ),
         );
       case ProjectStateType.finished:
+        final isDirectlyRemove = ref.watch(isDirectlyRemoveProvider);
         return Stack(
           key: const ValueKey('finished'),
           children: [
             ListView.builder(
+              padding: const EdgeInsets.only(bottom: 80),
               itemCount: projectList.length,
               itemBuilder: (context, index) {
                 final project = projectList[index];
@@ -110,36 +111,54 @@ class FilePage extends HookConsumerWidget {
                   onTap: () {
                     FileUtils.openInFinder(project.path);
                   },
-                  title: Text(
-                    project.name,
-                    style: ShadTheme.of(context).textTheme.small,
+                  leading: Icon(
+                    project.type == ProjectType.flutter ? Icons.flutter_dash : Icons.javascript,
+                    color: project.type == ProjectType.flutter ? Colors.blue : Colors.yellow.shade800,
+                  ),
+                  title: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          project.name,
+                          style: ShadTheme.of(context).textTheme.small.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade200,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          project.type == ProjectType.flutter ? 'Flutter' : 'NodeJS',
+                          style: const TextStyle(fontSize: 10, color: Colors.grey),
+                        ),
+                      ),
+                    ],
+                  ),
+                  subtitle: Text(
+                    project.foldersToClean.join(', '),
+                    style: const TextStyle(fontSize: 11),
                   ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(FileUtils.formatFileSize(project.size)),
-                      const SizedBox(width: 10),
-                      Text(
-                        intl.DateFormat('yyyy-MM-dd').format(project.lastModified),
-                        style: TextStyle(color: Colors.grey.shade600),
-                      ),
-                      const SizedBox(width: 10),
-                      SizedBox(
-                        width: 30,
-                        height: 30,
-                        child: FittedBox(
-                          child: ShadButton.outline(
-                            leading: const Icon(
-                              Icons.search,
-                              size: 30,
-                            ),
-                            onPressed: () {
-                              FileUtils.openInFinder(project.path);
-                            },
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            FileUtils.formatFileSize(project.size),
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                        ),
+                          Text(
+                            intl.DateFormat('yyyy-MM-dd').format(project.lastModified),
+                            style: TextStyle(color: Colors.grey.shade600, fontSize: 10),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 5),
+                      const SizedBox(width: 15),
                       SizedBox(
                         width: 30,
                         height: 30,
@@ -148,10 +167,11 @@ class FilePage extends HookConsumerWidget {
                             leading: const Icon(
                               Icons.delete_rounded,
                               size: 30,
+                              color: Colors.redAccent,
                             ),
                             onPressed: () => ref
                                 .read(projectListProvider.notifier)
-                                .cleanBuildFolder(project, isDirectlyRemove: ref.watch(isDirectlyRemovePrefProvider)),
+                                .cleanProject(project, isDirectlyRemove: isDirectlyRemove),
                           ),
                         ),
                       ),
@@ -167,12 +187,21 @@ class FilePage extends HookConsumerWidget {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 width: double.infinity,
-                color: Colors.grey.shade100,
-                child: ShadSwitch(
-                  direction: TextDirection.rtl,
-                  value: ref.watch(isDirectlyRemovePrefProvider),
-                  onChanged: (v) => ref.read(isDirectlyRemovePrefProvider.notifier).update(v),
-                  label: const Text('Delete directly'),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  border: Border(top: BorderSide(color: Colors.grey.shade200)),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ShadSwitch(
+                        direction: TextDirection.rtl,
+                        value: isDirectlyRemove,
+                        onChanged: (v) => ref.read(isDirectlyRemoveProvider.notifier).update(v),
+                        label: const Text('Delete directly (Skip Trash)'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
