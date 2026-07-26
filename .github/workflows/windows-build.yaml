@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - windows-support
+      - feature/windows-support
   workflow_dispatch:
 
 jobs:
