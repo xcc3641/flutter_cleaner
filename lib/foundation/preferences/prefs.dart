@@ -12,6 +12,13 @@ class Pref {
     instance = await SharedPreferences.getInstance();
   }
 
+  /// 演示模式：仅使用内存数据，不读写磁盘上的偏好设置
+  static Future<void> awaitInMemory(Map<String, Object> values) async {
+    // ignore: invalid_use_of_visible_for_testing_member
+    SharedPreferences.setMockInitialValues(values);
+    instance = await SharedPreferences.getInstance();
+  }
+
   /// 默认行为
   static PrefKey<T?> nullable<T>(String key) => NullablePrefKey(key);
 

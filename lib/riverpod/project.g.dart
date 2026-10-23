@@ -6,7 +6,7 @@ part of 'project.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$projectListHash() => r'07ff15195b70ee23cb19872b307e2b948cfa417b';
+String _$projectListHash() => r'f29e1015352456f5c2a24194ab34957b77af3b1b';
 
 /// See also [ProjectList].
 @ProviderFor(ProjectList)
@@ -21,7 +21,7 @@ final projectListProvider =
 );
 
 typedef _$ProjectList = AutoDisposeNotifier<List<FileInfo>>;
-String _$projectStateHash() => r'cbbfa4598a4962de1dedf6c34fb6d5d48fc31c60';
+String _$projectStateHash() => r'b746950b50017001b63e0ccf46c768e25e2501f7';
 
 /// See also [ProjectState].
 @ProviderFor(ProjectState)
@@ -37,12 +37,12 @@ final projectStateProvider =
 
 typedef _$ProjectState = AutoDisposeNotifier<ProjectStateType>;
 String _$projectScanProgressHash() =>
-    r'e29b20eb3078c3f2abd3a4edf9d9a66fdb03e02f';
+    r'b91ba4c305ebe8f71118f69dbbbecafe7a8f3a62';
 
 /// See also [ProjectScanProgress].
 @ProviderFor(ProjectScanProgress)
 final projectScanProgressProvider =
-    AutoDisposeNotifierProvider<ProjectScanProgress, String>.internal(
+    NotifierProvider<ProjectScanProgress, String>.internal(
   ProjectScanProgress.new,
   name: r'projectScanProgressProvider',
   debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
@@ -52,6 +52,6 @@ final projectScanProgressProvider =
   allTransitiveDependencies: null,
 );
 
-typedef _$ProjectScanProgress = AutoDisposeNotifier<String>;
+typedef _$ProjectScanProgress = Notifier<String>;
 // ignore_for_file: type=lint
 // ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

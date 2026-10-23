@@ -54,3 +54,5 @@ android/fastlane/report.xml
 ios/fastlane/report.xml
 
 *.plist
+# The macOS app needs its Info.plist in the build upload.
+!macos/Runner/Info.plist
